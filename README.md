@@ -1,7 +1,7 @@
 # HashtagNoMoreTweetAnalysis
 Sentiment analysis, Semantic Network and Topic modeling: Case study on analyzing tweets towards African NoMore campaign.
 
-![img](map.png)
+![img](img/map.png)
 Figure 1 : Mapping of twitter user location who partcipated on the campaign
 
 ## Project Goal
