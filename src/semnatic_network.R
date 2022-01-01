@@ -1,3 +1,7 @@
+# set the path of your project folder 
+
+setwd("/home/kidist/UOT/01-2nd-1st-sem/DSD/dsd-project")
+
 # import all important libraries
 library(rtweet)
 library(tidyverse) 
@@ -6,19 +10,16 @@ library(igraph)
 library(twinetverse)
 library(widyr)
 library(tm)
+library(igraph)
 library(ggraph)
 # load the data
-tweets = read.csv("all_csv_file//combined_csv.csv")
-tweets["date"]= as.Date(tweets$created_at)
+load("processed_data/cleaned_tweets.RData")
 
-# Connecting users to the hash-tags they use (only for the first day tweet including neighbors of the node .
-
+# Connecting users to the hash-tags they use(only for the first day tweet including neighbors of the node .
 tags <-tweets %>% 
   filter(!is.na(hashtags)) %>%
   select(user_id, status_id, created_at, screen_name, text, source,
-         reply_to_status_id, reply_to_user_id, reply_to_screen_name, favorite_count,
-         retweet_count,retweet_user_id,retweet_screen_name, quote_count, 
-         reply_count, mentions_user_id, mentions_screen_name, hashtags)
+         favorite_count, hashtags)
 
 glimpse(tags)
 colnames(tags)
@@ -94,8 +95,6 @@ sigmajs(width = "100%", height = "600px") %>%
 
 
 # _______________________________________________
-
-# Error to fix 
 
 
 # connect the  @users mentioned in the tweets to each other

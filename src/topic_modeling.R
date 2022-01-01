@@ -1,3 +1,7 @@
+# set the path of your project folder 
+
+setwd("/home/kidist/UOT/01-2nd-1st-sem/DSD/dsd-project")
+
 # load the libraries
 library(tidyverse)
 library(tidytext)
@@ -9,15 +13,11 @@ library(stringr)
 library(stm)
 
 # load data 
-load("all_csv_file/cleaned_tweets.RData")
+load("processed_data/cleaned_tweets.RData")
 
 # drop unwanted columns
 tweets<-tweets %>% 
-  select(created_at, text,)
-
-#get number of tokens  
-tweets$count <- ntoken(tweets$text) 
-table(tweets$count)
+  select(created_at, text,count)
 
 # Select only tweets with more than 5 words and from 01:00-04:00 UTC time
 day1_tweets <- tweets %>%

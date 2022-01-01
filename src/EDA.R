@@ -8,7 +8,6 @@ library(tidytext)
 library(ggplot2)
 library(tweetrmd)
 library(emo)
-library(wordcloud)
 library(widyr)
 library(tm)
 library(igraph)
@@ -166,7 +165,7 @@ emo = tweets_df %>%
   top_n(10)
 
 theme_set(theme_classic())
-g <- ggplot(k, aes(emoji, n))
+g <- ggplot(emo, aes(emoji, n))
 g + geom_bar(stat="identity", width = 0.5, fill="#9370DB") + 
   labs(title="Top Emoji", 
        y = "Frequency", x = "Emojis",
@@ -182,6 +181,7 @@ hash = tweets_df %>%
   top_n(10)
 
 theme_set(theme_classic())
+
 g <- ggplot(hash, aes(n,hashtag))
 g + geom_bar(stat="identity", width = 0.5, fill="tomato2") + 
   labs(title="Top hashtags", 
@@ -199,10 +199,10 @@ mentions = tweets_df %>%
   top_n(10)
 
 g <- ggplot(mentions, aes(n,mentions))
-g + geom_bar(stat="identity", width = 0.5, fill="#8B008B") + 
-  labs(title="Top @", 
+g + geom_bar(stat="identity", width = 0.5, fill="#006400") + 
+  labs(title="Top Mentions", 
        x = "Frequency of @", y = "Mentions",
-       subtitle="Top 10 mostly mentions  in the tweet", 
+       subtitle="Top 10 mostly mentioned names in the tweet", 
        caption="\nSource: Data collected from Twitter's REST API via rtweet") +
   theme(axis.text.x = element_text(angle=65, vjust=0.6))
 
@@ -213,7 +213,7 @@ active = tweets_df %>%
   top_n(10)
 
 g <- ggplot(active, aes(n,screen_name))
-g + geom_bar(stat="identity", width = 0.5, fill="#006400") + 
+g + geom_bar(stat="identity", width = 0.5, fill="#8B008B") + 
   labs(title="Top user", 
        x = "Frequency", y = "Screen_name",
        subtitle="Top 10 mostly active user in the tweet", 
@@ -257,101 +257,3 @@ g + geom_bar(stat="identity", width = 0.5, fill="#FF8C00") +
   theme(axis.text.x = element_text(angle=65, vjust=0.6))
 
 
-#________________________________________________________________
-# plot word network
-
-tweets<-tweets_df %>% 
-  select(created_at, screen_name, text, source)
-
-# remove punctuation, convert to lowercase, add id for each tweet!
-words <- tweets %>%
-  mutate(text = str_remove_all(text, "&amp;|&lt;|&gt;"),
-         text = str_remove_all(text, "\\s?(f|ht)(tp)(s?)(://)([^\\.]*)[\\.|/](\\S*)"),
-         text = str_remove_all(text, "[^\x01-\x7F]")) 
-
-# collapsing words to a common root to aid comparison of vocabulary
-words$text <- stemDocument(words$text)
-
-# generate couple of consecutive words Bi-gram
-
-words <- words %>%
-  unnest_tokens(word, text, token = "ngrams", n = 2)  %>%
-  count(word, sort = TRUE)
-
-# split couples of words in variables
-words <- words %>%
-  separate(word, c("word1", "word2"), sep = " ")
-
-# delete special characters and others
-tweet_filtered <- words %>%
-  filter(!word1 %in% stop_words$word,
-         !word1 %in% str_remove_all(stop_words$word, "'"),
-         str_detect(word1, "[a-z]"),
-         !str_detect(word1, "^#"),         
-         !str_detect(word1, "@\\S+")) %>%
-  filter(!word2 %in% stop_words$word,
-         !word2 %in% str_remove_all(stop_words$word, "'"),
-         str_detect(word2, "[a-z]"),
-         !str_detect(word2, "^#"),         
-         !str_detect(word2, "@\\S+")) 
-
-# Create a list of stop words: a list of words that are not worth including
-my_stop_words <- stop_words %>% select(-lexicon) %>% 
-  bind_rows(data.frame(word = c("cnn", "t.co")))
-
-tweet_filtered <- tweet_filtered %>%
-  filter(!word1 %in% my_stop_words$word) %>%
-  filter(!word2 %in% my_stop_words$word)
-
-# plot word network
-windows()
-tweet_filtered %>%
-  filter(n >= 800) %>%
-  graph_from_data_frame() %>%
-  ggraph(layout = "fr") +
-  geom_edge_link(aes(edge_alpha = n, edge_width = n)) +
-  geom_node_point(color = "#B8860B", size = 3) +
-  geom_node_text(aes(label = name), vjust = 1.8, size = 4) +
-  labs(title = "Word Network",
-       subtitle = " ",
-       x = "", y = "")
-
-
-# Cancel single couples of network
-
-tweet_counts1 <- tweet_filtered %>%
-  filter(n >= 800)
-wx1 <- tweet_counts1  %>%
-  count(word1, sort=TRUE) 
-wx2 <- tweet_counts1 %>%
-  count(word2, sort=TRUE) 
-
-#merge the frequencies
-tweet_counts1 <- rename(tweet_counts1, c(ntot="n"))
-tweet_counts1<-merge(tweet_counts1,wx2,by.x="word2",by.y="word2", all.x=TRUE)
-
-#Rename Variable
-tweet_counts1 <- rename(tweet_counts1, c(n2="n"))
-tweet_counts1<-merge(tweet_counts1,wx1,by.x="word1",by.y="word1", all.x=TRUE)
-tweet_counts1 <- rename(tweet_counts1, c(n1="n"))
-
-# Select the sub sample
-tweet_counts1 <- subset(tweet_counts1, subset = n1>1 | n2>1)
-
-tweet_counts1$n1 <- NULL
-tweet_counts1$n2 <- NULL
-
-tweet_counts1$lnn<- log(tweet_counts1$ntot)
-
-# plot word network
-windows()
-tweet_counts1 %>%
-  filter(ntot >= 800) %>%
-  graph_from_data_frame() %>%
-  ggraph(layout = "fr") +
-  geom_edge_link(aes(edge_alpha = lnn, edge_width = lnn)) +
-  geom_node_point(color = "#B8860B", size = 2.5) +
-  geom_node_text(aes(label = name), vjust = 1.8, size = 4) +
-  labs(title = "Word Network: Tweets text: language=en",
-       subtitle = "Text mining twitter data ",
-       x = "", y = "")

@@ -1,3 +1,7 @@
+# set the path of your project folder 
+
+setwd("/home/kidist/UOT/01-2nd-1st-sem/DSD/dsd-project")
+
 # libraries 
 library(tidyverse)
 library(tidytext)
@@ -8,17 +12,12 @@ library("cowplot")
 require(lubridate)
 
 # load cleaned tweet_data
-load("all_csv_file/cleaned_tweets.RData")
+load("processed_data/cleaned_tweets.RData")
 
 # drop unwanted columns
 tweets<-tweets %>% 
-  select(created_at, text,)
+  select(created_at, text,count)
 
-
-# get the token-count 
-
-tweets$count <- ntoken(tweets$text) 
-table(tweets$count) 
 
 # filter a day tweets with count > 2
 
