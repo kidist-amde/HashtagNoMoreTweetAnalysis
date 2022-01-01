@@ -10,7 +10,10 @@
 
 # Example code in package build process
 *-Ex.R
-
+python_scripts
+raw_data
+raw_data.zip
+processed_data
 # Output files from R CMD build
 /*.tar.gz
 
