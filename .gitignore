@@ -5,6 +5,7 @@
 # Session Data files
 .RData
 models
+images
 # User-specific files
 .Ruserdata
 

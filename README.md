@@ -40,15 +40,15 @@ The project implmented using R and to excute all the src codes you have to insta
 ## Project Structure
 
 All R scripts found in the src folder and:
-- `tweet_scraping.R`: R script to used to scrap the tweet data from the Twitter REST API.
+- `tweet_scraping.R`: R script to scrap the tweet data from the Twitter REST API.
 - `merging_raw_datasets.R`: R script to combine all the tweets collected for the last few weeks  into one dataframe by eleminating the duplicate tweets
 - `EDA.R`: R script to perform explanratory data analysis
-- `tweet_coordinate.ipynb`: Python script to get the coordinate information of the tweets from the place_full_name information of the data and to append the information to the dataframe
+- `tweet_coordinate.ipynb`: Python script to get the coordinate information of the tweets from the place_full_name information of the tweet data and to append the information to the dataframe
 - `text_preprocessing.R`: R script to implement all the text preprocessing task ,to get tokens and splitting the text into the weekly interval.
 - `word_net.R`: R script to explor more on the tweet text data. ngram,word networks.
 - `semantic_net.R`: R script to implment the semantic network of tweets
 - `sentiment_analysis.R`:R script to implment  tweet sentiment
-- `topic_modeling.R`: R script to   model weekly topics 
+- `topic_modeling.R`: R script to implment topic modeling 
 
 
 
