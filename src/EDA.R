@@ -9,6 +9,7 @@ library(ggplot2)
 library(tweetrmd)
 library(emo)
 library(widyr)
+library(wordcloud)
 library(tm)
 library(igraph)
 library(ggraph)
@@ -23,7 +24,7 @@ dim(tweets_df)
 
 # number of users participated in the tweets
 length(unique(tweets_df$user_id))
-tweets_df$
+
 # plot points on top of a leaflet basemap
 
 site_locations <- leaflet(tweets_df) %>%
@@ -221,39 +222,7 @@ g + geom_bar(stat="identity", width = 0.5, fill="#8B008B") +
   theme(axis.text.x = element_text(angle=65, vjust=0.6))
 
 
-#* Top words
 
-words <- tweets_df %>%
-  mutate(text = str_remove_all(text, "&amp;|&lt;|&gt;"),
-         text = str_remove_all(text, "\\s?(f|ht)(tp)(s?)(://)([^\\.]*)[\\.|/](\\S*)"),
-         text = str_remove_all(text, "[^\x01-\x7F]")) %>% 
-  unnest_tokens(word, text, token = "tweets") %>%
-  filter(!word %in% stop_words$word,
-         !word %in% str_remove_all(stop_words$word, "'"),
-         str_detect(word, "[a-z]"),
-         !str_detect(word, "^#"),         
-         !str_detect(word, "@\\S+")) %>%
-  count(word, sort = TRUE)
 
-#* Then we use the wordcloud package to create a visualization of the word frequencies.
-# Create a list of stop words: a list of words that are not worth including
-my_stop_words <- stop_words %>% select(-lexicon) %>% 
-  bind_rows(data.frame(word = c("cnn", "t.co")))
-
-tweet_words <- words%>%
-  filter(!word %in% my_stop_words$word) 
-# word cloud 
-tweet_words %>% 
-  with(wordcloud(word, n, random.order = FALSE, max.words = 100, colors = "#4B0082"))
-
-# plotting, words frequencies
-
-g <- ggplot(tweet_words[1:15,], aes(n,word))
-g + geom_bar(stat="identity", width = 0.5, fill="#FF8C00") + 
-  labs(title="Top Words", 
-       x = "Frequency of word", y = "Words",
-       subtitle="Top 15 mostly used words  in the tweet", 
-       caption="\nSource: Data collected from Twitter's REST API via rtweet") +
-  theme(axis.text.x = element_text(angle=65, vjust=0.6))
 
 

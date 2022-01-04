@@ -1,6 +1,6 @@
 # set the path of your project folder 
 
-setwd("/home/kidist/UOT/01-2nd-1st-sem/DSD/dsd-project")
+setwd("...")
 
 # load the libraries
 library(tidyverse)
@@ -15,97 +15,42 @@ library(stm)
 # load data 
 load("processed_data/cleaned_tweets.RData")
 
-# drop unwanted columns
+# select only important columns for the task
 tweets<-tweets %>% 
-  select(created_at, text,count)
-
-# Select only tweets with more than 5 words and from 01:00-04:00 UTC time
-day1_tweets <- tweets %>%
-  filter(count > 2 &
-           created_at >= as.POSIXlt("2021-11-13 02:44:11+00:00", "UTC") & 
-           created_at < as.POSIXlt("2021-11-14 00:00:00+00:00", "UTC"))
-
-
-# sort by time: created_at
-day1_tweets <- day1_tweets[order(day1_tweets$created_at),]
-
-# generate vars hours and minutes
-day1_tweets$hr <- hour(day1_tweets$created_at)
-day1_tweets$mint <- minute(day1_tweets$created_at)
-
-# recode time minutes in quarter
-day1_tweets <- day1_tweets %>%
-  mutate(m15 = ifelse(mint %in% 0:14, 1,
-                      ifelse(mint %in% 15:29, 2,
-                             ifelse(mint %in% 30:44, 3, 4))))
-day1_tweets <- day1_tweets %>%
-  mutate(h = ifelse(hr %in% 1, 0,
-                    ifelse(hr %in% 2, 4, 8)))
-
-table(day1_tweets$h,day1_tweets$m15)
-
-# Generate new time interval variable
-day1_tweets$timeclas <- day1_tweets$h+day1_tweets$m15
-
-# Check the correctness of recode
-table(day1_tweets$hr,day1_tweets$timeclas)
-table(day1_tweets$mint,day1_tweets$timeclas)
-# drop the column we don't need
-day1_tweets$hr <- NULL
-day1_tweets$mint <- NULL
-day1_tweets$h <- NULL
-day1_tweets$m15 <- NULL
-
-# add id to tweets
-day1_tweets<- day1_tweets %>% 
-  mutate(
-    id = 1:n()
-  )
+  select(created_at, text,count,week_number)
 
 #Generate the qunteda corpus
 
-day1_tweets_corpus <- corpus(day1_tweets) 
-day1_tweets_corpus
+tweets_corpus <- corpus(tweets) 
 
 # Assigns a unique identifier to each text
-docvars(day1_tweets_corpus, "Textno") <- sprintf("%02d", 1:ndoc(day1_tweets_corpus))
+docvars(tweets_corpus, "Text_ID") <- sprintf("%02d", 1:ndoc(tweets_corpus))
 
 # Document variables list
-day1_tweets_corpus %>% docvars() %>% names()
+tweets_corpus %>% docvars() %>% names()
 
 # inspect the document-level variables
-head(docvars(day1_tweets_corpus))
-tail(docvars(day1_tweets_corpus))
+head(docvars(tweets_corpus))
+tail(docvars(tweets_corpus))
 
 # Generate quanteda corpus
 
-pippo<-dfm(day1_tweets_corpus, 
+q_df<-dfm(tweets_corpus, 
            include_docvars = TRUE) 
 
-pippo<-dfm(pippo, remove = "$")
+# keep only words occurring 90% times and in at most 75% of the documents
 
-# drop tweet less than 2 words
-pippo<-dfm_subset(pippo, ntoken(pippo) > 2)
-ndoc(pippo)
-
-#Further, after removal of function words and punctuation in dfm(), 
-#we keep only the top 5% of the most frequent features (min_termfreq = 0.90) 
-#that appear in less than 10% of all documents (max_docfreq = 0.1) using dfm_trim() 
-#to focus on common but distinguishing features.
-
-pippo<-dfm_trim(pippo, 
-                min_termfreq = 0.90, 
+q_df1<-dfm_trim(q_df, 
+                min_termfreq = 0.9, 
                 termfreq_type = "quantile", 
-                max_docfreq = 0.1, 
+                max_docfreq = 0.75, 
                 docfreq_type = "prop")
 
-# drop tweet less than 3 words
-pippo<-dfm_subset(pippo, ntoken(pippo) > 3)
-ndoc(pippo)
+length(q_df) - length(q_df1)
 
-#Structural topic models (STM) 
-# Calculate the STM 
-dfm2stm <- convert(pippo, to = "stm")
+# Calculate the Structural topic models (STM) 
+
+dfm2stm <- convert(q_df1, to = "stm")
 
 # define the number of topics
 n.topic <- 5
@@ -120,11 +65,11 @@ model.stm <- stm(
   init.type = "Spectral"
 )
 
-#* To get a first insight, we print the terms that appear in each topic.
-xx1 <- as.data.frame(t(labelTopics(model.stm, n = 10)$prob))
+# print the terms that appear in each topic.
+topic_term <- as.data.frame(t(labelTopics(model.stm, n = 10)$prob))
 
-#* The following plot allows us to intuitively get information on the share of 
-#* the different topics at the overall corpus.
+
+# plot different topics at the overall corpus.
 
 plot(
   model.stm,
@@ -135,17 +80,12 @@ plot(
 )
 
 
-#* 
-#* Using the package stm, we can now visualize the different words of a topic with 
-#* a wordcloud. Since topic 4 has the highest share, we use it for the next 
-#* visualization. The location of the words is randomized and changes each time 
-#* we plot the wordcloud while the size of the words is relative to their 
-#* frequency and remains the same.
-#* 
+
+# Using the package stm, we can now visualize a topic with a wordcloud.
 
 cloud(model.stm,
-      topic = 2,
-      scale = c(3.25, .5))
+      topic = 5,
+      scale = c(5, .3))
 
 
 plot(model.stm, 
@@ -162,48 +102,29 @@ plot(model.stm, type = "labels", topics = c(1, 2, 3, 4,5), main = "Topic terms")
 
 plot(model.stm,
      type = "perspectives",
-     topics = c(2, 4),
+     topics = c(1, 2),
      main = "Putting two different topics in perspective")
-
-
 
 plot(model.stm,
      type = "perspectives",
-     topics = c(5, 4),
+     topics = c(2,3),
      main = "Putting two different topics in perspective")
 
-# Next, we calculate the prevalence of the topics over time. 
+plot(model.stm,
+     type = "perspectives",
+     topics = c(3, 4),
+     main = "Putting two different topics in perspective")
 
-modell.stm.labels <- labelTopics(model.stm, 1:n.topic)
+plot(model.stm,
+     type = "perspectives",
+     topics = c(4, 5),
+     main = "Putting two different topics in perspective")
 
-dfm2stm$meta$datum <- as.numeric(pippo$timeclas)
+plot(model.stm,
+     type = "perspectives",
+     topics = c(1, 5),
+     main = "Putting two different topics in perspective")
 
-modell.stm.effekt <- estimateEffect(1:n.topic ~ s(timeclas), 
-                                    model.stm, 
-                                    meta = dfm2stm$meta,
-                                    prior = 1e-5)
-par(mfrow=c(4,2))
-
-modell.stm.labels <- labelTopics(model.stm, 1:n.topic)
-
-dfm2stm$meta$datum <- as.numeric(pippo$timeclas)
-
-modell.stm.effekt <- estimateEffect(1:n.topic ~ s(timeclas), 
-                                    model.stm, 
-                                    meta = dfm2stm$meta,
-                                    prior = 1e-5)
-par(mfrow=c(4,2))
-
-for (i in 1:5)
-{
-  plot(modell.stm.effekt, 
-       "timeclas", 
-       method = "continuous", 
-       topics = i, 
-       main = paste0(modell.stm.labels$prob[i,1:3], 
-                     collapse = ", "), 
-       ylab = "", printlegend = F)
-}
 
 # STM topic (count) tuning ==>  searchK
 #number of topics can also be determined for an STM model.,
@@ -213,6 +134,7 @@ mein.stm.idealK <- searchK(dfm2stm$documents,
                            K = seq(4, 20, by = 2), 
                            max.em.its = 75)
 plot(mein.stm.idealK)
+
 
 # correlations between topics. 
 mod.out.corr <- topicCorr(model.stm, 

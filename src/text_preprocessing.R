@@ -1,6 +1,6 @@
 # set the path of your project folder 
 
-setwd("/home/kidist/UOT/01-2nd-1st-sem/DSD/dsd-project")
+setwd("...")
 
 
 library(tidyverse) 
@@ -55,9 +55,16 @@ tweets$text[110]
 tweets$text <- str_replace_all(tweets$text, "no more","nomore")
 tweets$text <- str_replace_all(tweets$text, "ethio","ethiopia")
 
+# remove all one to two letter words
+tweets$text <- gsub(" *\\b[[:alpha:]]{1,2}\\b *", " ", tweets$text) # Remove 1 to 2letter words
+tweets$text <- gsub("^ +| +$|( ) +", "\\1", tweets$text) # Remove excessive spacing
+
+tweets$text[110]
+
+
 # get the token and append to data-frame as new column
 tweets$count <- ntoken(tweets$text) 
-table(tweets$count) 
+table(tweets$count)
 
 # sort the tweets by time: created_at
 tweets <- tweets[order(tweets$created_at),]

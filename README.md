@@ -7,6 +7,7 @@ Figure 1 : Mapping of twitter user location who partcipated on the campaign
 ## Project Goal
 
 This study examines 260,475 tweets that mention #NoMore in order to analyze the public’s reactions towards the NoMore campaign.  Syuzhet R package is  used to classify the public’s reaction represented by tweets into sentiment class and structural topic models (STM) is used for discovering the abstract "topics" that occur in the tweets.
+
 The project was done for the completion of Digital social data course at the University of Trento.The report paper can be found [here]()
 
 ## Dataset
@@ -27,8 +28,15 @@ The project implmented using R and to excute all the src codes you have to insta
 - igraph
 - ggraph
 - leaflet
-```
+- quanteda
+- syuzhet
+- Rgraphviz
+- dplyr
+- topicmodels
+- stringr
+- stm
 
+```         
 ## Project Structure
 
 All R scripts found in the src folder and:
@@ -36,7 +44,7 @@ All R scripts found in the src folder and:
 - `merging_raw_datasets.R`: R script to combine all the tweets collected for the last few weeks  into one dataframe by eleminating the duplicate tweets
 - `EDA.R`: R script to perform explanratory data analysis
 - `tweet_coordinate.ipynb`: Python script to get the coordinate information of the tweets from the place_full_name information of the data and to append the information to the dataframe
-- `text_preprocessing.R`: R script to implement all the text preprocessing task ,to get tokens and splitting the text into the weekly interval
+- `text_preprocessing.R`: R script to implement all the text preprocessing task ,to get tokens and splitting the text into the weekly interval.
 - `word_net.R`: R script to explor more on the tweet text data. ngram,word networks.
 - `semantic_net.R`: R script to implment the semantic network of tweets
 - `sentiment_analysis.R`:R script to implment  tweet sentiment
